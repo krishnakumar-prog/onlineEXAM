@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Tests & Questions</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #003744;
+    }
+    .form-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #003744;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005a68;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #003744;
+      color: white;
+    }
+    .action-btn {
+      padding: 5px 10px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .edit-btn { background-color: #00b894; color: white; }
+    .delete-btn { background-color: #d63031; color: white; }
+    .set-btn { background-color: #ffd369; color: #000; }
+  </style>
+</head>
+<body>
+
+  <h1>Admin - Manage Tests & Questions</h1>
+
+  <!-- Create Test Form -->
+  <div class="form-container">
+    <h2>Create New Test</h2>
+    <label for="testName">Test Name:</label>
+    <input type="text" id="testName" placeholder="Enter test name" required>
+    <label for="testDesc">Description:</label>
+    <textarea id="testDesc" rows="3" placeholder="Enter test description"></textarea>
+    <button onclick="addTest()">Add Test</button>
+  </div>
+
+  <!-- Tests Table -->
+  <h2>Available Tests</h2>
+  <table id="testTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Test Name</th>
+        <th>Description</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Manage Questions Section -->
+  <div id="questionSection" style="display:none; margin-top:40px;">
+    <h2 id="questionTitle"></h2>
+    <div class="form-container" style="background:#00677c; color:white;">
+      <label for="question">Question:</label>
+      <textarea id="question" rows="2" placeholder="Enter question"></textarea>
+      <label for="optionA">Option A:</label>
+      <input type="text" id="optionA" placeholder="Enter option A" />
+      <label for="optionB">Option B:</label>
+      <input type="text" id="optionB" placeholder="Enter option B" />
+      <label for="optionC">Option C:</label>
+      <input type="text" id="optionC" placeholder="Enter option C" />
+      <label for="optionD">Option D:</label>
+      <input type="text" id="optionD" placeholder="Enter option D" />
+      <label for="answer">Correct Answer:</label>
+      <select id="answer">
+        <option value="">Select correct answer</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+      <button onclick="addQuestion()">Add Question</button>
+    </div>
+
+    <table id="questionsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Question</th>
+          <th>Options</th>
+          <th>Answer</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <button onclick="uploadExam()">Upload Exam</button>
+
+<script>
+  let testList = JSON.parse(localStorage.getItem("tests")) || [];
+  let allQuestions = JSON.parse(localStorage.getItem("questions")) || {};
+  let currentTest = null;
+
+  function saveTests() {
+    localStorage.setItem("tests", JSON.stringify(testList));
+  }
+  function saveQuestions() {
+    localStorage.setItem("questions", JSON.stringify(allQuestions));
+  }
+
+  function addTest() {
+    const name = document.getElementById('testName').value.trim();
+    const desc = document.getElementById('testDesc').value.trim();
+    if (!name) {
+      alert("Please enter a test name.");
+      return;
+    }
+    testList.push({ name, desc });
+    saveTests();
+    updateTestTable();
+    document.getElementById('testName').value = '';
+    document.getElementById('testDesc').value = '';
+  }
+
+  function updateTestTable() {
+    const tbody = document.querySelector('#testTable tbody');
+    tbody.innerHTML = '';
+    testList.forEach((test, index) => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${test.name}</td>
+          <td>${test.desc}</td>
+          <td>
+            <button class="action-btn set-btn" onclick="openQuestions('${test.name}')">Set Questions</button>
+            <button class="action-btn delete-btn" onclick="deleteTest(${index})">Delete</button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function deleteTest(index) {
+    if (confirm("Delete this test?")) {
+      const testName = testList[index].name;
+      delete allQuestions[testName];
+      testList.splice(index, 1);
+      saveTests();
+      saveQuestions();
+      updateTestTable();
+    }
+  }
+
+  function openQuestions(testName) {
+    currentTest = testName;
+    document.getElementById("questionTitle").textContent = `Manage Questions - ${testName}`;
+    document.getElementById("questionSection").style.display = "block";
+    if (!allQuestions[testName]) allQuestions[testName] = [];
+    renderQuestions();
+  }
+
+  function addQuestion() {
+    const question = document.getElementById("question").value.trim();
+    const optionA = document.getElementById("optionA").value.trim();
+    const optionB = document.getElementById("optionB").value.trim();
+    const optionC = document.getElementById("optionC").value.trim();
+    const optionD = document.getElementById("optionD").value.trim();
+    const answer = document.getElementById("answer").value;
+
+    if (!question || !optionA || !optionB || !optionC || !optionD || !answer) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    allQuestions[currentTest].push({ 
+      question, 
+      options: { A: optionA, B: optionB, C: optionC, D: optionD }, 
+      answer 
+    });
+    saveQuestions();
+    renderQuestions();
+    clearQuestionForm();
+  }
+
+  function renderQuestions() {
+    const tbody = document.querySelector("#questionsTable tbody");
+    tbody.innerHTML = '';
+    allQuestions[currentTest].forEach((q, index) => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${q.question}</td>
+          <td>
+            A: ${q.options.A} <br>
+            B: ${q.options.B} <br>
+            C: ${q.options.C} <br>
+            D: ${q.options.D}
+          </td>
+          <td>${q.answer}</td>
+          <td>
+            <button class="action-btn edit-btn" onclick="editQuestion(${index})">Edit</button>
+            <button class="action-btn delete-btn" onclick="deleteQuestion(${index})">Delete</button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function editQuestion(index) {
+    const q = allQuestions[currentTest][index];
+    document.getElementById("question").value = q.question;
+    document.getElementById("optionA").value = q.options.A;
+    document.getElementById("optionB").value = q.options.B;
+    document.getElementById("optionC").value = q.options.C;
+    document.getElementById("optionD").value = q.options.D;
+    document.getElementById("answer").value = q.answer;
+    allQuestions[currentTest].splice(index, 1);
+    saveQuestions();
+    renderQuestions();
+  }
+
+  function deleteQuestion(index) {
+    if (confirm("Delete this question?")) {
+      allQuestions[currentTest].splice(index, 1);
+      saveQuestions();
+      renderQuestions();
+    }
+  }
+
+  function clearQuestionForm() {
+    document.getElementById("question").value = "";
+    document.getElementById("optionA").value = "";
+    document.getElementById("optionB").value = "";
+    document.getElementById("optionC").value = "";
+    document.getElementById("optionD").value = "";
+    document.getElementById("answer").value = "";
+  }
+         
+  function uploadExam() {
+  saveTests();
+  saveQuestions();
+  alert("Exam uploaded successfully! You can now see it in the Assessment page.");
+}
+
+  updateTestTable();
+</script>
+
+</body>
+</html>

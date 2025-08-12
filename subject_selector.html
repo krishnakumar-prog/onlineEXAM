@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Assessment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* Background Animation with warm yellow/golden tones */
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(-45deg, #152313, #202c1a, #ffca28, #ffb300);
+      background-size: 400% 400%;
+      animation: gradientBG 10s ease infinite;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #4a3c00; /* dark brownish for good contrast */
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Container */
+    .container {
+      text-align: center;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.3); /* slightly more transparent */
+      padding: 50px;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      max-width: 600px;
+      width: 90%;
+    }
+
+    .container h1 {
+      font-size: 36px;
+      margin-bottom: 40px;
+      color: #4a3c00; /* dark brown */
+      text-shadow: 1px 1px 0 rgba(255 255 255 / 0.5);
+    }
+
+    /* Buttons */
+    .subject-btn {
+      display: block;
+      width: 500px;
+      max-width: 100%;
+      margin: 20px auto;
+      padding: 15px;
+      background: #ffc94a; /* matching login button yellow */
+      border: none;
+      border-radius: 12px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #4a3c00; /* dark brown text */
+      cursor: pointer;
+      transition: 0.3s ease-in-out;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .subject-btn:hover {
+      transform: scale(1.05);
+      background-color: #ffb300; /* darker yellow on hover */
+      color: #fff; /* white text on hover */
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Responsive */
+    @media screen and (max-width: 500px) {
+      .container {
+        width: 90%;
+        padding: 30px 20px;
+      }
+
+      .subject-btn {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Select Your Subject</h1>
+    <button class="subject-btn" onclick="window.location.href='maths_exam_pro.html'">🧮 Maths</button>
+    <button class="subject-btn" onclick="window.location.href='aptitude_exam_pro.html'">🧠 Aptitude</button>
+    <button class="subject-btn" onclick="window.location.href='grammer.html'">🕮 Grammer</button>
+  </div>
+</body>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const container = document.querySelector(".container");
+    const tests = JSON.parse(localStorage.getItem("tests")) || [];
+  
+    tests.forEach(test => {
+      const btn = document.createElement("button");
+      btn.className = "subject-btn";
+      btn.textContent = test.name;
+      btn.onclick = function() {
+        localStorage.setItem("currentExam", test.name);
+        window.location.href = "exam_page.html"; 
+      };
+      container.appendChild(btn);
+    });
+  });
+  </script>
+  
+</html>

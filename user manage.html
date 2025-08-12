@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Manage Users</title>
+  <style>
+    :root{
+      --bg:#f4f6fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --danger:#ef4444;
+      --success:#16a34a;
+      --glass: rgba(255,255,255,0.6);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,Segoe UI,Roboto,Arial,sans-serif; background:linear-gradient(180deg,var(--bg),#eef2ff 100%);
+      color:#0f172a; padding:28px;
+    }
+
+    .container{max-width:1100px;margin:0 auto}
+
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    p.lead{color:var(--muted);margin:4px 0 0;font-size:13px}
+
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+
+    .toolbar{display:flex;gap:12px;align-items:center;margin:14px 0}
+    .search{flex:1}
+    input,select{padding:10px 12px;border-radius:8px;border:1px solid #e6e9ef;font-size:14px}
+    button{padding:10px 12px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+    button.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.12)}
+    button.danger{background:var(--danger)}
+
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:12px 10px;text-align:left;border-bottom:1px solid #f1f4f8;font-size:14px}
+    th{font-size:13px;color:var(--muted);font-weight:600}
+
+    .role-badge{padding:6px 8px;border-radius:999px;font-size:12px;font-weight:600}
+    .role-student{background:#eef2ff;color:#1e40af}
+    .role-teacher{background:#ecfdf5;color:#065f46}
+    .actions button{margin-right:6px}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:flex;align-items:center;justify-content:center;z-index:60}
+    .modal{width:720px;background:var(--card);border-radius:12px;padding:18px;box-shadow:0 20px 60px rgba(2,6,23,0.25)}
+    .modal h3{margin:0 0 8px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+    .small{font-size:13px;color:var(--muted)}
+    .footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+
+    /* responsive */
+    @media (max-width:800px){
+      .modal{width:92%}
+      .grid{grid-template-columns:1fr}
+      header{flex-direction:column;align-items:flex-start;gap:10px}
+      .toolbar{flex-direction:column;align-items:stretch}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>👥 Manage Users</h1>
+        <p class="lead">View and control registered students and teachers. Add, edit, search, filter and export user data.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="addUserBtn">+ Add User</button>
+        <button id="exportCsvBtn" class="ghost">Export CSV</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="toolbar">
+        <input id="searchInput" class="search" placeholder="Search by name, email or id..." />
+        <select id="filterRole">
+          <option value="all">All roles</option>
+          <option value="student">Students</option>
+          <option value="teacher">Teachers</option>
+        </select>
+        <select id="sortBy">
+          <option value="name_asc">Name ▲</option>
+          <option value="name_desc">Name ▼</option>
+          <option value="id_asc">ID ▲</option>
+          <option value="id_desc">ID ▼</option>
+        </select>
+      </div>
+
+      <div id="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:86px">ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th style="width:120px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTbody">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <p class="small" style="margin-top:10px">Tip: This demo stores users in your browser's localStorage. In a real app connect these actions to server API endpoints (GET /users, POST /users, PUT /users/:id, DELETE /users/:id).</p>
+    </div>
+  </div>
+
+  <!-- Modal template -->
+  <template id="modalTpl">
+    <div class="modal-backdrop" id="modal">
+      <div class="modal card">
+        <h3 id="modalTitle">Add user</h3>
+        <div style="margin-top:8px">
+          <form id="userForm">
+            <div class="grid">
+              <div>
+                <label class="small">Full name</label>
+                <input type="text" id="u_name" required />
+              </div>
+              <div>
+                <label class="small">Email</label>
+                <input type="email" id="u_email" required />
+              </div>
+              <div>
+                <label class="small">Role</label>
+                <select id="u_role">
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                </select>
+              </div>
+              <div>
+                <label class="small">Phone (optional)</label>
+                <input type="text" id="u_phone" />
+              </div>
+            </div>
+            <input type="hidden" id="u_id" />
+          </form>
+        </div>
+        <div class="footer">
+          <div class="small" id="modalMsg"></div>
+          <div style="display:flex;gap:8px">
+            <button id="cancelBtn" class="ghost">Cancel</button>
+            <button id="saveBtn">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // --- Demo data & storage helpers ---
+    const LS_KEY = 'exam_users_demo_v1';
+
+    const sampleUsers = [
+      {id:'U1001',name:'Aisha Khan',email:'aisha.khan@example.com',role:'student',phone:'9876543210'},
+      {id:'U1002',name:'Rajesh Iyer',email:'rajesh.iyer@example.com',role:'teacher',phone:'9123456780'},
+      {id:'U1003',name:'Meera Patel',email:'meera.patel@example.com',role:'student',phone:''},
+      {id:'U1004',name:'Sahil Rao',email:'sahil.rao@example.com',role:'teacher',phone:'9988776655'}
+    ];
+
+    function readUsers(){
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw){ localStorage.setItem(LS_KEY, JSON.stringify(sampleUsers)); return sampleUsers.slice(); }
+      try{ return JSON.parse(raw); }catch(e){ return [] }
+    }
+    function writeUsers(list){ localStorage.setItem(LS_KEY, JSON.stringify(list)); }
+
+    // --- UI references ---
+    const usersTbody = document.getElementById('usersTbody');
+    const searchInput = document.getElementById('searchInput');
+    const filterRole = document.getElementById('filterRole');
+    const sortBy = document.getElementById('sortBy');
+
+    let users = readUsers();
+
+    // --- render ---
+    function renderTable(){
+      const q = searchInput.value.trim().toLowerCase();
+      const role = filterRole.value;
+      let filtered = users.filter(u=>{
+        if(role!=='all' && u.role!==role) return false;
+        if(!q) return true;
+        return (u.name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q) || (u.id||'').toLowerCase().includes(q);
+      });
+
+      // sort
+      const s = sortBy.value;
+      if(s==='name_asc') filtered.sort((a,b)=>a.name.localeCompare(b.name));
+      if(s==='name_desc') filtered.sort((a,b)=>b.name.localeCompare(a.name));
+      if(s==='id_asc') filtered.sort((a,b)=>a.id.localeCompare(b.id));
+      if(s==='id_desc') filtered.sort((a,b)=>b.id.localeCompare(a.id));
+
+      usersTbody.innerHTML = '';
+      if(filtered.length===0){
+        usersTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">No users found</td></tr>';
+        return;
+      }
+
+      for(const u of filtered){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${u.id}</td>
+          <td>${escapeHtml(u.name||'—')}</td>
+          <td>${escapeHtml(u.email||'—')}</td>
+          <td><span class="role-badge ${u.role==='student'?'role-student':'role-teacher'}">${u.role}</span></td>
+          <td class="actions">
+            <button class="ghost" data-act="edit" data-id="${u.id}">Edit</button>
+            <button class="ghost" data-act="reset" data-id="${u.id}">Reset PW</button>
+            <button class="danger" data-act="delete" data-id="${u.id}">Delete</button>
+          </td>
+        `;
+        usersTbody.appendChild(tr);
+      }
+    }
+
+    // escape helper
+    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // --- events ---
+    searchInput.addEventListener('input', renderTable);
+    filterRole.addEventListener('change', renderTable);
+    sortBy.addEventListener('change', renderTable);
+
+    // row actions (event delegation)
+    usersTbody.addEventListener('click', e=>{
+      const btn = e.target.closest('button'); if(!btn) return;
+      const act = btn.dataset.act; const id = btn.dataset.id;
+      if(act==='edit') openUserModal('edit', id);
+      if(act==='reset') handleResetPassword(id);
+      if(act==='delete') handleDeleteUser(id);
+    });
+
+    // --- Add/Edit modal ---
+    const modalTpl = document.getElementById('modalTpl');
+    function openUserModal(mode='add', id=null){
+      const modalNode = modalTpl.content.cloneNode(true);
+      document.body.appendChild(modalNode);
+      const backdrop = document.getElementById('modal');
+      const modalTitle = document.getElementById('modalTitle');
+      const cancelBtn = document.getElementById('cancelBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const userForm = document.getElementById('userForm');
+      const modalMsg = document.getElementById('modalMsg');
+
+      modalTitle.textContent = mode==='add' ? 'Add user' : 'Edit user';
+
+      if(mode==='edit'){
+        const u = users.find(x=>x.id===id);
+        if(!u){ modalMsg.textContent='User not found'; }
+        document.getElementById('u_name').value = u.name||'';
+        document.getElementById('u_email').value = u.email||'';
+        document.getElementById('u_role').value = u.role||'student';
+        document.getElementById('u_phone').value = u.phone||'';
+        document.getElementById('u_id').value = u.id;
+      } else {
+        document.getElementById('u_id').value = generateId();
+      }
+
+      cancelBtn.onclick = ()=> closeModal();
+      backdrop.addEventListener('click', (ev)=>{ if(ev.target===backdrop) closeModal(); });
+
+      saveBtn.onclick = ()=>{
+        // validate form
+        const name = document.getElementById('u_name').value.trim();
+        const email = document.getElementById('u_email').value.trim();
+        const role = document.getElementById('u_role').value;
+        const phone = document.getElementById('u_phone').value.trim();
+        const uid = document.getElementById('u_id').value;
+        if(!name || !email){ modalMsg.textContent = 'Please fill required fields'; return; }
+
+        if(mode==='add'){
+          if(users.some(x=>x.email.toLowerCase()===email.toLowerCase())){ modalMsg.textContent='Email already exists'; return; }
+          users.push({id:uid,name,email,role,phone});
+          writeUsers(users);
+          closeModal(); renderTable();
+        } else {
+          const idx = users.findIndex(x=>x.id===uid);
+          if(idx===-1){ modalMsg.textContent='User not found'; return; }
+          users[idx] = {...users[idx],name,email,role,phone};
+          writeUsers(users);
+          closeModal(); renderTable();
+        }
+      };
+
+      function closeModal(){
+        const b = document.getElementById('modal');
+        if(b) b.remove();
+      }
+    }
+
+    // --- generate id ---
+    function generateId(){
+      const num = Math.floor(1000 + Math.random()*9000);
+      return 'U' + num;
+    }
+
+    // --- reset password (demo) ---
+    function handleResetPassword(id){
+      if(!confirm('Reset password for user '+id+'? This is a demo (does not send email).')) return;
+      // In real app: call POST /users/:id/reset-password
+      alert('Password reset link would be sent to user (demo).');
+    }
+
+    // --- delete user ---
+    function handleDeleteUser(id){
+      if(!confirm('Delete user '+id+'? This action cannot be undone.')) return;
+      users = users.filter(x=>x.id!==id);
+      writeUsers(users);
+      renderTable();
+    }
+
+    // --- Add user button ---
+    document.getElementById('addUserBtn').addEventListener('click', ()=> openUserModal('add'));
+
+    // --- Export CSV ---
+    document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+      const headers = ['id','name','email','role','phone'];
+      const rows = users.map(u=>headers.map(h => '"'+((u[h]||'').toString().replace(/"/g,'""'))+'"').join(','));
+      const csv = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='users_export.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // --- initial render ---
+    renderTable();
+
+    // Optional: expose a global for debugging in console
+    window.__USERS = {get:()=>users,set:(v)=>{users=v;writeUsers(users);renderTable()}};
+  </script>
+</body>
+</html>

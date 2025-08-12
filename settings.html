@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>⚙ Settings - Admin Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      transition: background 0.3s, color 0.3s;
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      transition: background 0.3s, color 0.3s, border 0.3s;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 15px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #1a252f;
+    }
+
+    /* Dark Mode Styles */
+    body.dark-mode {
+      background: #0f172a;
+      color: #f9fafb;
+    }
+    body.dark-mode .card {
+      background: #1e293b;
+      color: #f9fafb;
+    }
+    body.dark-mode input,
+    body.dark-mode select {
+      background: #334155;
+      color: #f9fafb;
+      border: 1px solid #475569;
+    }
+    body.dark-mode button {
+      background: #475569;
+      color: white;
+    }
+    body.dark-mode button:hover {
+      background: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <header>⚙ Settings - Admin Dashboard</header>
+
+  <div class="container">
+    <!-- System Preferences -->
+    <div class="card">
+      <h2>System Preferences</h2>
+      <label for="siteName">Site Name</label>
+      <input type="text" id="siteName" placeholder="Enter site name">
+
+      <label for="theme">Theme</label>
+      <select id="theme">
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
+
+    <!-- Security Options -->
+    <div class="card">
+      <h2>Security Options</h2>
+      <label for="password">Change Password</label>
+      <input type="password" id="password" placeholder="Enter new password">
+
+      <label>
+        <input type="checkbox" id="twoFA"> Enable Two-Factor Authentication
+      </label>
+    </div>
+
+    <button id="saveBtn">💾 Save Settings</button>
+  </div>
+
+  <script>
+    // Apply theme function
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
+
+    // Load saved settings
+    window.onload = () => {
+      const siteName = localStorage.getItem('siteName') || '';
+      const theme = localStorage.getItem('theme') || 'light';
+      const twoFA = localStorage.getItem('twoFA') === 'true';
+      
+      document.getElementById('siteName').value = siteName;
+      document.getElementById('theme').value = theme;
+      document.getElementById('twoFA').checked = twoFA;
+
+      applyTheme(theme);
+    };
+
+    // Save settings
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const siteName = document.getElementById('siteName').value;
+      const theme = document.getElementById('theme').value;
+      const twoFA = document.getElementById('twoFA').checked;
+
+      localStorage.setItem('siteName', siteName);
+      localStorage.setItem('theme', theme);
+      localStorage.setItem('twoFA', twoFA);
+
+      alert('Settings saved successfully!');
+    });
+
+    // Instant theme change
+    document.getElementById('theme').addEventListener('change', (e) => {
+      const selectedTheme = e.target.value;
+      applyTheme(selectedTheme);
+      localStorage.setItem('theme', selectedTheme);
+    });
+  </script>
+</body>
+</html>

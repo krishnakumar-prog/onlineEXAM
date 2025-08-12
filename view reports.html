@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - View Reports</title>
+  <style>
+    :root{
+      --bg:#f4f6fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --danger:#ef4444;
+      --success:#16a34a;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:Inter,Segoe UI,Roboto,Arial,sans-serif; background:linear-gradient(180deg,var(--bg),#eef2ff);
+      color:#0f172a; padding:28px;
+    }
+
+    .container{max-width:1100px;margin:0 auto}
+
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    p.lead{color:var(--muted);margin:4px 0 0;font-size:13px}
+
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(2,6,23,0.06);margin-bottom:20px}
+    
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:12px 10px;text-align:left;border-bottom:1px solid #f1f4f8;font-size:14px}
+    th{font-size:13px;color:var(--muted);font-weight:600}
+    
+    .score-pass{color:var(--success);font-weight:600}
+    .score-fail{color:var(--danger);font-weight:600}
+
+    canvas{max-width:100%}
+    @media (max-width:800px){
+      header{flex-direction:column;align-items:flex-start;gap:10px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>📊 View Reports</h1>
+        <p class="lead">Check student scores, pass/fail status, and analytics.</p>
+      </div>
+      <button id="exportCsvBtn" style="padding:10px 12px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer">Export CSV</button>
+    </header>
+
+    <div class="card">
+      <h2 style="font-size:16px;margin-bottom:8px">Student Scores</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Subject</th>
+            <th>Score</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="scoresTbody">
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:16px;margin-bottom:8px">Analytics</h2>
+      <canvas id="chartCanvas" height="120"></canvas>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const data = [
+      {id:'S101',name:'KRISHNA',subject:'Mathematics',score:78},
+      {id:'S102',name:'HARI HARAN',subject:'Science',score:45},
+      {id:'S103',name:'SURESH',subject:'English',score:88},
+      {id:'S104',name:'DEVA',subject:'Mathematics',score:56},
+      {id:'S105',name:'SHARMA',subject:'Science',score:92},
+      {id:'S106',name:'VIJAY',subject:'English',score:39}
+    ];
+
+    const passMark = 50;
+    const scoresTbody = document.getElementById('scoresTbody');
+
+    function renderTable(){
+      scoresTbody.innerHTML = '';
+      data.forEach(d=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${d.id}</td>
+          <td>${d.name}</td>
+          <td>${d.subject}</td>
+          <td>${d.score}</td>
+          <td class="${d.score>=passMark?'score-pass':'score-fail'}">${d.score>=passMark?'Pass':'Fail'}</td>
+        `;
+        scoresTbody.appendChild(tr);
+      });
+    }
+
+    function renderChart(){
+      const subjects = [...new Set(data.map(d=>d.subject))];
+      const avgScores = subjects.map(sub=>{
+        const filtered = data.filter(d=>d.subject===sub);
+        return (filtered.reduce((a,b)=>a+b.score,0)/filtered.length).toFixed(1);
+      });
+
+      const ctx = document.getElementById('chartCanvas').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: subjects,
+          datasets: [{
+            label: 'Average Score',
+            data: avgScores,
+            backgroundColor: '#2563eb'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100
+            }
+          }
+        }
+      });
+    }
+
+    // Export CSV
+    document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+      const headers = ['id','name','subject','score','status'];
+      const rows = data.map(d=>{
+        const status = d.score>=passMark?'Pass':'Fail';
+        return [d.id,d.name,d.subject,d.score,status].map(val=>`"${String(val).replace(/"/g,'""')}"`).join(',');
+      });
+      const csv = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'student_scores.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    renderTable();
+    renderChart();
+  </script>
+</body>
+</html>
