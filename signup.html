@@ -3,99 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
+  <title>Sign Up - Online Exam</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      display: flex;
-      height: 100vh;
+      background-color: #f9f9f9;
     }
 
-    .image-side {
-      width: 42%;
-      background-image: url("signupim.jpg");
-      background-size: cover;
-      background-position: center;
-      
-    }
-
-    .form-side {
-      flex: 1;
+    /* Header */
+    header {
+      background-color: #004f59;
+      padding: 1rem 2rem;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
-      padding: 40px;
-      background-color: #ffffff;
+      color: white;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li {
+      margin-left: 1.5rem;
+    }
+    nav ul li a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav ul li a:hover {
+      text-decoration: underline;
     }
 
-    .form-side h1 {
-      color: lightcoral;
-      margin-bottom: 40px;
-      text-align: center;
-      font-size: 36px;
+    /* Sign Up Form */
+    .signup-section {
+      background-color: #00515B;
+      padding: 3rem 1rem;
+      display: flex;
+      justify-content: center;
     }
-
-    form {
+    .signup-box {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
       width: 100%;
       max-width: 400px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
-
+    .signup-box h2 {
+      text-align: center;
+      color: #004f59;
+      margin-bottom: 1.5rem;
+    }
+    label {
+      font-weight: bold;
+      color: #333;
+      margin-top: 1rem;
+      display: block;
+    }
     input {
       width: 100%;
-      padding: 12px;
-      margin: 10px 0;
+      padding: 0.7rem;
+      margin-top: 0.3rem;
       border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 16px;
+      border-radius: 5px;
     }
-
     button {
+      margin-top: 1.5rem;
       width: 100%;
-      padding: 12px;
-      margin-top: 20px;
-      background-color: lightcoral;
+      padding: 0.8rem;
+      background-color: #FFC94A;
       border: none;
-      border-radius: 10px;
-      color: white;
-      font-size: 18px;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: bold;
       cursor: pointer;
     }
-
     button:hover {
-      background-color: #e07070;
+      background-color: #ffb400;
     }
-
-    @media screen and (max-width: 768px) {
-      body {
-        flex-direction: column;
-      }
-      .image-side {
-        height: 200px;
-      }
+    p {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    p a {
+      color: #004f59;
+      text-decoration: none;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
+<header>
 
-  <div class="image-side"></div>
+  <h1>Online Examination System</h1>
+  
+</header>
 
-  <div class="form-side">
-    <h1 style="font-size: 70px;">Welcome to Pageloft</h1>
-    <form>
-      <input type="text" placeholder="First Name" required />
-      <input type="text" placeholder="Last Name" required />
-      <input type="email" placeholder="Email" required />
-      <input type="password" placeholder="Password" required />
-      <input type="password" placeholder="Confirm Password" required />
+<section class="signup-section">
+  <div class="signup-box">
+    <h2>Create Your Account</h2>
+    <form action="signup_process.php" method="POST">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="Enter password" required>
+
+      <label for="confirm_password">Confirm Password</label>
+      <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm password" required>
+
       <button type="submit">Sign Up</button>
-      <p>if you already have an account <a href="home.html ">Login</a></p>
     </form>
+    <p>Already have an account? <a href="login.html">Login</a></p>
   </div>
+</section>
 
 </body>
 </html>
+
